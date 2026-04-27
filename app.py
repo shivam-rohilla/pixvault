@@ -67,6 +67,11 @@ def create_app(config_class=Config):
         except Exception:
             return date_str or ""
 
+    # ── Health check (used by UptimeRobot to prevent cold starts) ─
+    @app.route("/health")
+    def health():
+        return "ok", 200
+
     # ── Error handlers ─────────────────────────────────────────
     @app.errorhandler(404)
     def not_found(e):
