@@ -24,12 +24,13 @@ def init_pool(database_url: str) -> None:
         database_url,
         min_size=1,
         max_size=5,           # stay within Supabase free-tier connection limit
-        open=True,            # connect immediately so first request is fast
+        open=False,           # lazy connect — avoids blocking gunicorn worker startup
         kwargs={
             "row_factory": dict_row,
             "prepare_threshold": None,   # required: pooler blocks prepared stmts
         },
     )
+    _pool.open(wait=False)    # open in background, don't block startup
 
 
 # ── Type coercion ──────────────────────────────────────────────
