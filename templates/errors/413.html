@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}File Too Large — Pixvault{% endblock %}
+{% block content %}
+<div class="min-h-[80vh] flex flex-col items-center justify-center text-center px-6">
+  <p class="text-8xl font-extrabold text-[#D2D2D7] tracking-tight mb-4">413</p>
+  <h1 class="text-2xl font-bold mb-2">File too large</h1>
+  <p class="text-[#6E6E73] mb-8">Files must be under 100 MB. Please try a smaller file.</p>
+  <a href="{{ url_for('media.upload') }}" class="btn-primary">Back to Upload</a>
+</div>
+{% endblock %}

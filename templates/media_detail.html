@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}{{ item.original_filename }} — Pixvault{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-10">
+  <div class="flex flex-col lg:flex-row gap-8">
+
+    <!-- ═══ Media preview ═══ -->
+    <div class="flex-1 min-w-0">
+      <!-- Back link -->
+      <a href="javascript:history.back()" class="inline-flex items-center gap-1.5 text-sm text-[#6E6E73] hover:text-[#1D1D1F] transition-colors mb-6">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+        Back
+      </a>
+
+      <div class="bg-white rounded-[18px] overflow-hidden shadow-sm border border-[#D2D2D7]/20 flex items-center justify-center min-h-[300px]">
+        {% if item.media_type == 'image' %}
+          <img src="{{ item.cloudinary_url }}" alt="{{ item.original_filename }}"
+               class="w-full h-auto max-h-[75vh] object-contain">
+        {% else %}
+          <video controls class="w-full max-h-[75vh]" preload="auto">
+            <source src="{{ item.cloudinary_url }}">
+            Your browser does not support the video tag.
+          </video>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ═══ Info sidebar ═══ -->
+    <div class="lg:w-[300px] flex-shrink-0 flex flex-col gap-4">
+
+      <!-- Filename & owner -->
+      <div class="bg-white rounded-[18px] shadow-sm border border-[#D2D2D7]/20 p-5">
+        <h1 class="font-semibold text-[15px] break-all mb-1">{{ item.original_filename }}</h1>
+        <p class="text-xs text-[#6E6E73]">by <a href="{{ url_for('media.portfolio', username=owner_username) }}" class="text-[#0071E3] hover:underline">{{ owner_username }}</a></p>
+
+        <div class="border-t border-[#D2D2D7]/50 mt-4 pt-4 space-y-2.5 text-sm">
+          <div class="flex justify-between">
+            <span class="text-[#6E6E73]">Type</span>
+            <span class="font-medium capitalize">{{ item.media_type }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[#6E6E73]">Size</span>
+            <span class="font-medium">{{ item.file_size | format_size }}</span>
+          </div>
+          {% if item.width and item.height %}
+          <div class="flex justify-between">
+            <span class="text-[#6E6E73]">Dimensions</span>
+            <span class="font-medium">{{ item.width }} × {{ item.height }}</span>
+          </div>
+          {% endif %}
+          {% if item.duration %}
+          <div class="flex justify-between">
+            <span class="text-[#6E6E73]">Duration</span>
+            <span class="font-medium">{{ "%.1f"|format(item.duration) }}s</span>
+          </div>
+          {% endif %}
+          <div class="flex justify-between">
+            <span class="text-[#6E6E73]">Uploaded</span>
+            <span class="font-medium">{{ item.created_at | format_date }}</span>
+          </div>
+          {% if item.albums %}
+          <div class="flex justify-between">
+            <span class="text-[#6E6E73]">Album</span>
+            <span class="font-medium">{{ item.albums.name }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="bg-white rounded-[18px] shadow-sm border border-[#D2D2D7]/20 p-5">
+        <h2 class="text-sm font-semibold mb-3">Tags</h2>
+        {% if item.tags %}
+        <div class="flex flex-wrap gap-1.5 mb-3">
+          {% for tag in item.tags %}
+          <span class="tag-chip">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-xs text-[#6E6E73] mb-3">No tags yet.</p>
+        {% endif %}
+
+        {% if is_owner %}
+        <form method="POST" action="{{ url_for('media.update_tags', media_id=item.id) }}" class="mt-2">
+          <input type="text" name="tags" placeholder="tag1, tag2, …"
+                 value="{{ item.tags | join(', ') if item.tags else '' }}"
+                 class="input-field text-sm py-2">
+          <button type="submit" class="btn-secondary text-xs mt-2 px-3 py-1.5 w-full justify-center">Update Tags</button>
+        </form>
+        {% endif %}
+      </div>
+
+      <!-- Actions -->
+      <div class="bg-white rounded-[18px] shadow-sm border border-[#D2D2D7]/20 p-5 flex flex-col gap-2">
+        <!-- Download -->
+        <a href="{{ url_for('media.download_media', media_id=item.id) }}"
+           class="btn-primary w-full justify-center py-2.5">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7l7 7 7-7"/></svg>
+          Download
+        </a>
+
+        <!-- Copy share link -->
+        <button onclick="copyLink('{{ request.url_root }}share/media/{{ item.share_token }}')"
+                class="btn-secondary w-full justify-center py-2.5 text-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Copy Share Link
+        </button>
+
+        {% if is_owner %}
+
+        <!-- Move to album -->
+        {% if move_albums %}
+        <form method="POST" action="{{ url_for('media.move_media', media_id=item.id) }}" class="flex gap-2 mt-1">
+          <select name="album_id" class="input-field text-sm py-2 flex-1">
+            <option value="">— No album —</option>
+            {% for a in move_albums %}
+            <option value="{{ a.id }}" {{ 'selected' if item.album_id == a.id }}>{{ a.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn-secondary px-3 py-2 text-xs flex-shrink-0">Move</button>
+        </form>
+        {% endif %}
+
+        <!-- Delete -->
+        <form method="POST" action="{{ url_for('media.delete_media', media_id=item.id) }}"
+              onsubmit="return confirm('Permanently delete this file?')" class="mt-1">
+          <button type="submit" class="w-full text-sm font-medium text-red-500 hover:text-red-700 py-2 rounded-xl hover:bg-red-50 transition-colors">
+            Delete File
+          </button>
+        </form>
+
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyLink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    const el = document.createElement('div');
+    el.className = 'fixed bottom-6 right-6 z-50 bg-[#1D1D1F] text-white text-sm px-5 py-3 rounded-2xl shadow-lg flash-msg';
+    el.textContent = 'Link copied!';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Pixvault — Your Cloud Gallery{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}Upload, organize and share your photos and videos beautifully.{% endblock %}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', '-apple-system', 'sans-serif'] },
+          colors: {
+            apple: { bg: '#F5F5F7', text: '#1D1D1F', accent: '#0071E3', secondary: '#6E6E73', border: '#D2D2D7' }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+
+<body class="bg-[#F5F5F7] text-[#1D1D1F] font-inter min-h-screen">
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="fixed top-0 inset-x-0 z-50 nav-blur bg-[#F5F5F7]/80 border-b border-[#D2D2D7]/60">
+  <div class="max-w-7xl mx-auto px-5 h-[54px] flex items-center justify-between">
+
+    <!-- Logo -->
+    <a href="{{ url_for('media.index') }}" class="flex items-center gap-2.5 select-none">
+      <img src="{{ url_for('static', filename='images/logo.png') }}"
+           alt="Pixvault" class="h-8 w-8 rounded-lg object-contain"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="h-8 w-8 bg-[#0071E3] rounded-lg items-center justify-center shadow-sm hidden">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" fill="white"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".7"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".7"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="text-[17px] font-bold tracking-tight">Pixvault</span>
+    </a>
+
+    <!-- Desktop nav -->
+    <div class="hidden md:flex items-center gap-1">
+      {% if current_user.is_authenticated %}
+        <!-- Nav links with divider -->
+        <div class="flex items-center gap-0.5 mr-2">
+          <a href="{{ url_for('media.dashboard') }}"       class="nav-link">Dashboard</a>
+          <a href="{{ url_for('album.albums') }}"          class="nav-link">Albums</a>
+          <a href="{{ url_for('media.upload') }}"          class="nav-link">Upload</a>
+          <a href="{{ url_for('media.search') }}"          class="nav-link">Search</a>
+          {% if current_user.is_admin %}
+          <a href="{{ url_for('admin.admin_dashboard') }}" class="nav-link">Admin</a>
+          {% endif %}
+        </div>
+
+        <div class="w-px h-5 bg-[#D2D2D7] mx-1"></div>
+
+        <!-- User dropdown -->
+        <div class="relative ml-1" id="user-menu-wrap">
+          <button onclick="toggleDropdown()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors text-sm font-medium">
+            <span class="w-6 h-6 rounded-full bg-[#0071E3] text-white text-[11px] font-bold flex items-center justify-center uppercase select-none">
+              {{ current_user.username[0] }}
+            </span>
+            {{ current_user.username }}
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="#6E6E73" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+
+          <div id="user-dropdown" class="hidden absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-[#D2D2D7]/40 overflow-hidden py-1 z-50">
+            <a href="{{ url_for('media.portfolio', username=current_user.username) }}"
+               class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[#F5F5F7] transition-colors">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              Public Portfolio
+            </a>
+            <a href="{{ url_for('auth.profile') }}"
+               class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[#F5F5F7] transition-colors">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm0 0v6m-4-3h8"/></svg>
+              Settings
+            </a>
+            <div class="border-t border-[#D2D2D7]/50 my-1"></div>
+            <a href="{{ url_for('auth.logout') }}"
+               class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-6 0v-1"/></svg>
+              Sign Out
+            </a>
+          </div>
+        </div>
+
+      {% else %}
+        <a href="{{ url_for('auth.login') }}"
+           class="px-3 py-1.5 text-sm font-medium text-[#1D1D1F] hover:text-[#0071E3] transition-colors rounded-lg hover:bg-black/5">
+          Sign In
+        </a>
+        <a href="{{ url_for('auth.register') }}"
+           class="px-4 py-1.5 text-sm font-medium text-white bg-[#0071E3] rounded-xl hover:bg-[#0077ED] transition-colors shadow-sm">
+          Get Started
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Mobile hamburger -->
+    <button onclick="toggleMobile()" class="md:hidden p-2 rounded-lg hover:bg-black/5">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M3 5h14M3 10h14M3 15h14" stroke="#1D1D1F" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-[#D2D2D7]/50 px-5 py-4 flex flex-col gap-1">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('media.dashboard') }}"  class="nav-link block py-2">Dashboard</a>
+      <a href="{{ url_for('album.albums') }}"      class="nav-link block py-2">Albums</a>
+      <a href="{{ url_for('media.upload') }}"      class="nav-link block py-2">Upload</a>
+      <a href="{{ url_for('media.search') }}"      class="nav-link block py-2">Search</a>
+      <a href="{{ url_for('auth.profile') }}"      class="nav-link block py-2">Profile</a>
+      <a href="{{ url_for('auth.logout') }}"       class="block py-2 text-sm font-medium text-red-500">Sign Out</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}"    class="nav-link block py-2">Sign In</a>
+      <a href="{{ url_for('auth.register') }}" class="block py-2 text-sm font-medium text-[#0071E3]">Get Started</a>
+    {% endif %}
+  </div>
+</nav>
+
+<style>
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1D1D1F;
+    border-radius: 10px;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+  .nav-link:hover {
+    background: rgba(0,0,0,0.06);
+    color: #0071E3;
+  }
+</style>
+
+<!-- ═══════════════════ FLASH MESSAGES ═══════════════════ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div id="flash-container" class="fixed top-16 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+  {% for category, message in messages %}
+  <div class="flash-msg flex items-start gap-3 bg-white rounded-2xl shadow-xl p-4 border border-[#D2D2D7]/30">
+    <!-- icon -->
+    {% if category == 'success' %}
+      <span class="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mt-0.5">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    {% elif category == 'error' %}
+      <span class="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center mt-0.5">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+    {% else %}
+      <span class="flex-shrink-0 w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 5v5m0-7h.01" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+    {% endif %}
+    <span class="text-sm text-[#1D1D1F] leading-snug flex-1">{{ message }}</span>
+    <button onclick="this.closest('.flash-msg').remove()" class="flex-shrink-0 text-[#6E6E73] hover:text-[#1D1D1F] ml-1">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3L3 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="pt-[54px]">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="border-t border-[#D2D2D7]/50 mt-24 py-10 px-6">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 bg-[#0071E3] rounded-[6px] flex items-center justify-center">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" fill="white"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".7"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".7"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="text-sm font-semibold">Pixvault</span>
+    </div>
+    <p class="text-sm text-[#6E6E73]">© 2024 Pixvault. All rights reserved.</p>
+    <div class="flex gap-4 text-sm text-[#6E6E73]">
+      <a href="#" class="hover:text-[#1D1D1F] transition-colors">Privacy</a>
+      <a href="#" class="hover:text-[#1D1D1F] transition-colors">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+<script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+
+<script>
+  /* Navbar interactions */
+  function toggleDropdown() {
+    document.getElementById("user-dropdown").classList.toggle("hidden");
+  }
+  function toggleMobile() {
+    document.getElementById("mobile-menu").classList.toggle("hidden");
+  }
+  document.addEventListener("click", (e) => {
+    const wrap = document.getElementById("user-menu-wrap");
+    if (wrap && !wrap.contains(e.target)) {
+      const dd = document.getElementById("user-dropdown");
+      if (dd) dd.classList.add("hidden");
+    }
+  });
+
+  /* Auto-dismiss flash messages after 5 s */
+  setTimeout(() => {
+    document.querySelectorAll(".flash-msg").forEach((el) => {
+      el.style.transition = "opacity 0.4s, transform 0.4s";
+      el.style.opacity = "0";
+      el.style.transform = "translateX(60px)";
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 5000);
+
+  /* Init Masonry on any .masonry-grid found in page */
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".masonry-grid").forEach((grid) => {
+      imagesLoaded(grid, () => {
+        new Masonry(grid, {
+          itemSelector: ".masonry-item",
+          columnWidth: ".grid-sizer",
+          percentPosition: true,
+          gutter: 16,
+        });
+      });
+    });
+  });
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

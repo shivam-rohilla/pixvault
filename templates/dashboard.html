@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — Pixvault{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100vh-54px)]">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="hidden lg:flex flex-col w-[260px] flex-shrink-0 bg-white border-r border-[#D2D2D7]/50 fixed top-[54px] bottom-0 overflow-y-auto sidebar-scroll z-30">
+    <div class="p-6 flex flex-col h-full">
+
+      <!-- User card -->
+      <div class="bg-[#F5F5F7] rounded-2xl p-4 mb-6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-full bg-[#0071E3] text-white flex items-center justify-center font-bold text-lg uppercase">
+            {{ current_user.username[0] }}
+          </div>
+          <div class="min-w-0">
+            <p class="font-semibold text-sm truncate">{{ current_user.username }}</p>
+            <p class="text-xs text-[#6E6E73] truncate">{{ current_user.email }}</p>
+          </div>
+        </div>
+        <!-- Storage bar -->
+        {% set storage_mb = current_user.storage_used / 1048576 %}
+        {% set storage_pct = [storage_mb / 1024 * 100, 100] | min %}
+        <div class="text-xs text-[#6E6E73] mb-1.5 flex justify-between">
+          <span>Storage</span>
+          <span>{{ current_user.storage_used | format_size }} / 1 GB</span>
+        </div>
+        <div class="bg-[#D2D2D7]/40 rounded-full h-1.5 overflow-hidden">
+          <div class="h-full rounded-full bg-[#0071E3]" style="width: {{ storage_pct | round(1) }}%"></div>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex flex-col gap-0.5 mb-6">
+        <a href="{{ url_for('media.dashboard') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium bg-[#0071E3]/10 text-[#0071E3]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          All Media
+        </a>
+        <a href="{{ url_for('album.albums') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+          Albums
+        </a>
+        <a href="{{ url_for('media.upload') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14m-7-7l7-7 7 7"/></svg>
+          Upload
+        </a>
+        <a href="{{ url_for('media.search') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+          Search
+        </a>
+        <a href="{{ url_for('media.portfolio', username=current_user.username) }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors" target="_blank">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/><path d="M14 4h6v6"/><path d="M20 4L10 14"/></svg>
+          Public Portfolio
+        </a>
+      </nav>
+
+      <!-- Albums list -->
+      <div class="flex-1">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-semibold text-[#6E6E73] uppercase tracking-wider">Albums</p>
+          <a href="{{ url_for('album.create_album') }}" class="text-[#0071E3] hover:text-[#0077ED] transition-colors" title="New album">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </a>
+        </div>
+        {% if albums %}
+          {% for album in albums[:8] %}
+          <a href="{{ url_for('album.view_album', album_id=album.id) }}"
+             class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors group">
+            <span class="text-base">{% if album.is_public %}🌐{% else %}🔒{% endif %}</span>
+            <span class="truncate flex-1">{{ album.name }}</span>
+          </a>
+          {% endfor %}
+          {% if albums | length > 8 %}
+          <a href="{{ url_for('album.albums') }}" class="block text-xs text-[#0071E3] px-2 mt-2">View all {{ albums | length }} albums →</a>
+          {% endif %}
+        {% else %}
+          <p class="text-xs text-[#6E6E73] px-2">No albums yet.</p>
+          <a href="{{ url_for('album.create_album') }}" class="block mt-2 text-xs text-[#0071E3] px-2">+ Create your first album</a>
+        {% endif %}
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN CONTENT ═══ -->
+  <div class="flex-1 lg:ml-[260px] p-6 lg:p-8 min-w-0">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Your Media</h1>
+        <p class="text-sm text-[#6E6E73] mt-0.5">{{ media_items | length }} file{{ 's' if media_items | length != 1 else '' }}</p>
+      </div>
+      <a href="{{ url_for('media.upload') }}" class="btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Upload
+      </a>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      {% set stats = [
+        (media_items | length, 'Total Files', '🗂️'),
+        (image_count, 'Images', '🖼️'),
+        (video_count, 'Videos', '🎬'),
+        (albums | length, 'Albums', '📁'),
+      ] %}
+      {% for val, label, icon in stats %}
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-[#D2D2D7]/20">
+        <div class="text-2xl mb-2">{{ icon }}</div>
+        <div class="text-2xl font-bold">{{ val }}</div>
+        <div class="text-xs text-[#6E6E73] mt-0.5">{{ label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if media_items %}
+
+    <!-- Masonry grid -->
+    <div class="masonry-grid cols-2" id="dash-grid">
+      <div class="grid-sizer"></div>
+
+      {% for item in media_items %}
+      <div class="masonry-item">
+        <div class="media-card group">
+
+          <!-- Media -->
+          {% if item.media_type == 'image' %}
+            <a href="{{ url_for('media.media_detail', media_id=item.id) }}">
+              <img src="{{ item.cloudinary_url }}" alt="{{ item.original_filename }}" loading="lazy">
+            </a>
+          {% else %}
+            <a href="{{ url_for('media.media_detail', media_id=item.id) }}">
+              <video preload="metadata" muted class="w-full h-auto">
+                <source src="{{ item.cloudinary_url }}">
+              </video>
+              <div class="play-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+            </a>
+          {% endif %}
+
+          <!-- Hover overlay -->
+          <div class="card-overlay">
+            {% if item.tags %}
+            <div class="flex flex-wrap gap-1 mb-1.5">
+              {% for tag in item.tags[:2] %}<span class="text-[10px] bg-white/20 text-white rounded-full px-2 py-0.5">{{ tag }}</span>{% endfor %}
+            </div>
+            {% endif %}
+            <p class="text-white text-xs font-medium truncate mb-2">{{ item.original_filename }}</p>
+            <div class="flex items-center gap-1.5">
+              <a href="{{ url_for('media.download_media', media_id=item.id) }}"
+                 class="p-1.5 bg-white/20 hover:bg-white/35 rounded-lg text-white transition-colors" title="Download">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7l7 7 7-7"/></svg>
+              </a>
+              <a href="{{ url_for('media.media_detail', media_id=item.id) }}"
+                 class="p-1.5 bg-white/20 hover:bg-white/35 rounded-lg text-white transition-colors" title="View">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </a>
+              <form method="POST" action="{{ url_for('media.delete_media', media_id=item.id) }}"
+                    onsubmit="return confirm('Delete this file?')" class="ml-auto">
+                <input type="hidden" name="next" value="{{ url_for('media.dashboard') }}">
+                <button type="submit" class="p-1.5 bg-white/20 hover:bg-red-500/70 rounded-lg text-white transition-colors" title="Delete">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="flex flex-col items-center justify-center py-24 text-center">
+      <div class="w-20 h-20 bg-[#F5F5F7] rounded-3xl flex items-center justify-center mb-6 text-4xl">📷</div>
+      <h2 class="text-xl font-semibold mb-2">No media yet</h2>
+      <p class="text-[#6E6E73] mb-6 max-w-xs">Upload your first photo or video to get started.</p>
+      <a href="{{ url_for('media.upload') }}" class="btn-primary">Upload Media</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

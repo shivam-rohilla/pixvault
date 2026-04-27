@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Albums — Pixvault{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-10">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Albums</h1>
+      <p class="text-[#6E6E73] text-sm mt-0.5">{{ albums | length }} album{{ 's' if albums | length != 1 else '' }}</p>
+    </div>
+    <a href="{{ url_for('album.create_album') }}" class="btn-primary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      New Album
+    </a>
+  </div>
+
+  {% if albums %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+    {% for album in albums %}
+    <a href="{{ url_for('album.view_album', album_id=album.id) }}" class="group block">
+      <div class="bg-white rounded-[18px] overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+
+        <!-- Cover -->
+        <div class="aspect-square bg-gradient-to-br from-[#F5F5F7] to-[#EAEAEC] overflow-hidden">
+          {% if album.cover %}
+            <img src="{{ album.cover }}" alt="{{ album.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center text-5xl">📁</div>
+          {% endif %}
+        </div>
+
+        <!-- Info -->
+        <div class="p-4">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="font-semibold text-sm leading-snug truncate">{{ album.name }}</h3>
+            <span class="text-base flex-shrink-0">{{ '🌐' if album.is_public else '🔒' }}</span>
+          </div>
+          <p class="text-xs text-[#6E6E73] mt-1">{{ album.media_count }} file{{ 's' if album.media_count != 1 else '' }}</p>
+          {% if album.description %}
+          <p class="text-xs text-[#6E6E73] mt-0.5 truncate">{{ album.description }}</p>
+          {% endif %}
+          <p class="text-[10px] text-[#D2D2D7] mt-2">{{ album.created_at | format_date }}</p>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="flex flex-col items-center justify-center py-32 text-center">
+    <div class="w-24 h-24 bg-[#F5F5F7] rounded-3xl flex items-center justify-center mb-6 text-5xl">📁</div>
+    <h2 class="text-xl font-semibold mb-2">No albums yet</h2>
+    <p class="text-[#6E6E73] mb-6 max-w-xs">Create an album to organize your media into collections.</p>
+    <a href="{{ url_for('album.create_album') }}" class="btn-primary">Create your first album</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

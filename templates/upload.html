@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Upload — Pixvault{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-6 py-12">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold tracking-tight mb-1">Upload Media</h1>
+    <p class="text-[#6E6E73]">Drag and drop files or browse to upload. Images and videos up to 100 MB.</p>
+  </div>
+
+  <!-- Options -->
+  <div class="bg-white rounded-[18px] border border-[#D2D2D7]/40 shadow-sm p-6 mb-5">
+    <div class="grid md:grid-cols-2 gap-4">
+
+      <!-- Album selector -->
+      <div>
+        <label class="block text-sm font-medium mb-1.5">Add to Album <span class="text-[#6E6E73] font-normal">(optional)</span></label>
+        <select id="album-select" class="input-field">
+          <option value="">— No album —</option>
+          {% for album in albums %}
+          <option value="{{ album.id }}">{{ album.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Tags input -->
+      <div>
+        <label class="block text-sm font-medium mb-1.5">Tags <span class="text-[#6E6E73] font-normal">(press Enter to add)</span></label>
+        <input type="text" id="tag-input" placeholder="landscape, travel, …" class="input-field">
+        <input type="hidden" id="tags-hidden">
+      </div>
+    </div>
+
+    <!-- Tag chips -->
+    <div id="tag-display" class="flex flex-wrap gap-2 mt-3 min-h-[28px]"></div>
+  </div>
+
+  <!-- Drop zone -->
+  <div id="drop-zone"
+       class="relative rounded-[18px] p-12 text-center cursor-pointer mb-6 transition-colors">
+    <input type="file" id="file-input" multiple
+           accept="image/*,video/*,.heic,.mkv,.wmv"
+           class="absolute inset-0 opacity-0 cursor-pointer">
+
+    <div class="pointer-events-none flex flex-col items-center gap-3">
+      <div class="w-16 h-16 bg-[#0071E3]/10 rounded-2xl flex items-center justify-center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-semibold text-[#1D1D1F] text-lg">Drop files here</p>
+        <p class="text-sm text-[#6E6E73] mt-0.5">or</p>
+      </div>
+      <button id="browse-btn" type="button" class="btn-secondary pointer-events-auto">Browse Files</button>
+      <p class="text-xs text-[#6E6E73]">JPG, PNG, GIF, WebP, SVG, HEIC, MP4, MOV, WebM, MKV · Max 100 MB each</p>
+    </div>
+  </div>
+
+  <!-- Upload queue -->
+  <div id="upload-queue" class="flex flex-col gap-3 mb-6"></div>
+
+  <!-- Upload button -->
+  <button id="upload-btn" disabled
+          class="btn-primary w-full justify-center py-3.5 text-base disabled:opacity-40 disabled:cursor-not-allowed">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7l7-7 7 7"/></svg>
+    Upload All
+  </button>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}404 — Page Not Found{% endblock %}
+{% block content %}
+<div class="min-h-[80vh] flex flex-col items-center justify-center text-center px-6">
+  <p class="text-8xl font-extrabold text-[#D2D2D7] tracking-tight mb-4">404</p>
+  <h1 class="text-2xl font-bold mb-2">Page not found</h1>
+  <p class="text-[#6E6E73] mb-8">The page you're looking for doesn't exist or has been moved.</p>
+  <a href="{{ url_for('media.index') }}" class="btn-primary">Go Home</a>
+</div>
+{% endblock %}

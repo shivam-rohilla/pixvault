@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — Pixvault{% endblock %}
+
+{% block content %}
+<div class="min-h-[90vh] flex items-center justify-center px-4 py-16">
+  <div class="w-full max-w-[400px]">
+
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <a href="{{ url_for('media.index') }}" class="inline-flex items-center gap-2 mb-4">
+        <div class="w-10 h-10 bg-[#0071E3] rounded-2xl flex items-center justify-center shadow">
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="6" height="6" rx="1.5" fill="white"/>
+            <rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".7"/>
+            <rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".7"/>
+            <rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".4"/>
+          </svg>
+        </div>
+      </a>
+      <h1 class="text-2xl font-bold tracking-tight">Welcome back</h1>
+      <p class="text-[#6E6E73] text-sm mt-1">Sign in to your Pixvault account</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-white rounded-[22px] shadow-lg border border-[#D2D2D7]/30 p-8">
+      <form method="POST" action="{{ url_for('auth.login') }}" class="flex flex-col gap-4">
+
+        <div>
+          <label class="block text-sm font-medium mb-1.5">Email</label>
+          <input type="email" name="email" required autocomplete="email"
+                 placeholder="you@example.com"
+                 class="input-field"
+                 value="{{ request.form.get('email', '') }}">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1.5">Password</label>
+          <input type="password" name="password" required autocomplete="current-password"
+                 placeholder="••••••••"
+                 class="input-field">
+        </div>
+
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" name="remember" class="rounded">
+            <span class="text-[#6E6E73]">Remember me</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary w-full justify-center py-3 text-[15px] mt-1">
+          Sign In
+        </button>
+      </form>
+    </div>
+
+    <!-- Footer link -->
+    <p class="text-center text-sm text-[#6E6E73] mt-6">
+      New to Pixvault?
+      <a href="{{ url_for('auth.register') }}" class="text-[#0071E3] font-medium hover:underline">Create an account</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

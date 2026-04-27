@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}New Album — Pixvault{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto px-6 py-12">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold tracking-tight mb-1">New Album</h1>
+    <p class="text-[#6E6E73]">Create a collection for your media.</p>
+  </div>
+
+  <div class="bg-white rounded-[22px] shadow-sm border border-[#D2D2D7]/30 p-8">
+    <form method="POST" action="{{ url_for('album.create_album') }}" class="flex flex-col gap-5">
+
+      <div>
+        <label class="block text-sm font-medium mb-1.5">Album Name <span class="text-red-500">*</span></label>
+        <input type="text" name="name" required placeholder="My Photos" class="input-field"
+               value="{{ request.form.get('name', '') }}">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1.5">Description <span class="text-[#6E6E73] font-normal">(optional)</span></label>
+        <textarea name="description" rows="3" placeholder="What's in this album?" class="input-field resize-none">{{ request.form.get('description', '') }}</textarea>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="is_public" id="is_public" class="rounded">
+        <label for="is_public" class="text-sm font-medium cursor-pointer">Make album public</label>
+        <span class="text-xs text-[#6E6E73]">— visible on your portfolio</span>
+      </div>
+
+      <div class="flex gap-3 mt-2">
+        <button type="submit" class="btn-primary flex-1 justify-center py-3">Create Album</button>
+        <a href="{{ url_for('album.albums') }}" class="btn-secondary flex-1 justify-center py-3">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
