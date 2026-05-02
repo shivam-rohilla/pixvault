@@ -15,16 +15,19 @@ _pool: ConnectionPool | None = None
 def init_pool(database_url: str) -> None:
     global _pool
 
-    # Supabase requires SSL
+    # Supabase requires SSL + fast connect timeout
     if "sslmode" not in database_url:
         sep = "&" if "?" in database_url else "?"
         database_url += f"{sep}sslmode=require"
+    if "connect_timeout" not in database_url:
+        database_url += "&connect_timeout=10"
 
     _pool = ConnectionPool(
         database_url,
-        min_size=1,
-        max_size=5,           # stay within Supabase free-tier connection limit
+        min_size=0,           # no eager connections — Render free tier is constrained
+        max_size=3,
         open=False,           # lazy connect — avoids blocking gunicorn worker startup
+        timeout=15,           # fail fast so users see an error instead of hanging
         kwargs={
             "row_factory": dict_row,
             "prepare_threshold": None,   # required: pooler blocks prepared stmts

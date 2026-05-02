@@ -27,23 +27,27 @@ def register():
             flash("Password must be at least 6 characters.", "error")
             return render_template("register.html")
 
-        if db.query_one("SELECT id FROM users WHERE username = %s", (username,)):
-            flash("That username is already taken.", "error")
-            return render_template("register.html")
-        if db.query_one("SELECT id FROM users WHERE email = %s", (email,)):
-            flash("An account with that email already exists.", "error")
-            return render_template("register.html")
+        try:
+            if db.query_one("SELECT id FROM users WHERE username = %s", (username,)):
+                flash("That username is already taken.", "error")
+                return render_template("register.html")
+            if db.query_one("SELECT id FROM users WHERE email = %s", (email,)):
+                flash("An account with that email already exists.", "error")
+                return render_template("register.html")
 
-        pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-        row = db.execute_one(
-            """INSERT INTO users (username, email, password_hash, is_admin, storage_used)
-               VALUES (%s, %s, %s, FALSE, 0) RETURNING *""",
-            (username, email, pw_hash),
-        )
-        if row:
-            login_user(User(row))
-            flash(f"Welcome to Pixvault, {username}!", "success")
-            return redirect(url_for("media.dashboard"))
+            pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+            row = db.execute_one(
+                """INSERT INTO users (username, email, password_hash, is_admin, storage_used)
+                   VALUES (%s, %s, %s, FALSE, 0) RETURNING *""",
+                (username, email, pw_hash),
+            )
+            if row:
+                login_user(User(row))
+                flash(f"Welcome to Pixvault, {username}!", "success")
+                return redirect(url_for("media.dashboard"))
+        except Exception:
+            flash("Database unavailable — please try again in a moment.", "error")
+            return render_template("register.html")
 
         flash("Registration failed. Please try again.", "error")
 
@@ -60,12 +64,14 @@ def login():
         password = request.form.get("password", "")
         remember = bool(request.form.get("remember"))
 
-        row = db.query_one("SELECT * FROM users WHERE email = %s", (email,))
-        if row and bcrypt.checkpw(password.encode(), row["password_hash"].encode()):
-            login_user(User(row), remember=remember)
-            return redirect(request.args.get("next") or url_for("media.dashboard"))
-
-        flash("Invalid email or password.", "error")
+        try:
+            row = db.query_one("SELECT * FROM users WHERE email = %s", (email,))
+            if row and bcrypt.checkpw(password.encode(), row["password_hash"].encode()):
+                login_user(User(row), remember=remember)
+                return redirect(request.args.get("next") or url_for("media.dashboard"))
+            flash("Invalid email or password.", "error")
+        except Exception:
+            flash("Database unavailable — please try again in a moment.", "error")
 
     return render_template("login.html")
 
