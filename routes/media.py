@@ -35,18 +35,7 @@ def _attach_album(item: dict) -> dict:
 # ── Landing page ───────────────────────────────────────────────
 @media_bp.route("/")
 def index():
-    showcase = []
-    try:
-        pub = db.query_all("SELECT id FROM albums WHERE is_public = TRUE LIMIT 30")
-        if pub:
-            ids = [r["id"] for r in pub]
-            showcase = db.query_all(
-                "SELECT * FROM media WHERE album_id = ANY(%s) ORDER BY created_at DESC LIMIT 18",
-                (ids,)
-            )
-    except Exception:
-        pass
-    return render_template("index.html", showcase=showcase)
+    return render_template("index.html", showcase=[])
 
 
 # ── Dashboard ──────────────────────────────────────────────────
