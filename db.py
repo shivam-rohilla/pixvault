@@ -1,39 +1,32 @@
 """
-db.py — psycopg3 + connection pool for Supabase transaction pooler.
-Pool reuses connections so we pay the SSL handshake only once, not per query.
+db.py — direct psycopg3 connections (no pool) for reliability on free-tier hosts.
 """
 import uuid
+import logging
 from datetime import datetime, date
 
 import psycopg
 from psycopg.rows import dict_row
-from psycopg_pool import ConnectionPool
 
-_pool: ConnectionPool | None = None
+log = logging.getLogger(__name__)
+
+_database_url: str = ""
 
 
 def init_pool(database_url: str) -> None:
-    global _pool
-
-    # Supabase requires SSL + fast connect timeout
+    """Store the connection URL (called init_pool for API compatibility)."""
+    global _database_url
     if "sslmode" not in database_url:
         sep = "&" if "?" in database_url else "?"
         database_url += f"{sep}sslmode=require"
     if "connect_timeout" not in database_url:
         database_url += "&connect_timeout=10"
+    _database_url = database_url
+    log.info("DB URL configured (pool-free mode)")
 
-    _pool = ConnectionPool(
-        database_url,
-        min_size=0,           # no eager connections — Render free tier is constrained
-        max_size=3,
-        open=False,           # lazy connect — avoids blocking gunicorn worker startup
-        timeout=15,           # fail fast so users see an error instead of hanging
-        kwargs={
-            "row_factory": dict_row,
-            "prepare_threshold": None,   # required: pooler blocks prepared stmts
-        },
-    )
-    _pool.open(wait=False)    # open in background, don't block startup
+
+def _connect():
+    return psycopg.connect(_database_url, row_factory=dict_row, prepare_threshold=None)
 
 
 # ── Type coercion ──────────────────────────────────────────────
@@ -48,7 +41,7 @@ def _row(r: dict) -> dict:
 
 # ── Public helpers ─────────────────────────────────────────────
 def query_all(sql: str, params=None) -> list[dict]:
-    with _pool.connection() as conn:
+    with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, params)
             return [_row(r) for r in cur.fetchall()]
@@ -61,7 +54,7 @@ def query_one(sql: str, params=None) -> dict | None:
 
 def execute(sql: str, params=None) -> list[dict]:
     """INSERT / UPDATE / DELETE — returns RETURNING rows if any."""
-    with _pool.connection() as conn:
+    with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, params)
             conn.commit()
